@@ -10,32 +10,30 @@ namespace BrawlShooter.Combat
         [SerializeField] private float lifeSeconds = 3f;
         [SerializeField] private int baseDamage = 600;
 
-        private Rigidbody physicsBody = default!;
-        private float timer;
-        private string instigatorName = "Unknown";
+        private Rigidbody _rigidbody = default!;
+        private float _timer;
 
         private void Awake()
         {
-            physicsBody = GetComponent<Rigidbody>();
+            _rigidbody = GetComponent<Rigidbody>();
         }
 
-        public void Initialize(AbilityDefinition sourceAbility, string instigator)
+        public void Initialize(AbilityDefinition sourceAbility)
         {
-            instigatorName = instigator;
             var speed = baseSpeed;
             if (sourceAbility != null)
             {
                 speed *= Mathf.Lerp(0.5f, 1.5f, (int)sourceAbility.AbilityType / 4f);
             }
 
-            physicsBody.velocity = transform.forward * speed;
-            timer = lifeSeconds;
+            _rigidbody.velocity = transform.forward * speed;
+            _timer = lifeSeconds;
         }
 
         private void Update()
         {
-            timer -= Time.deltaTime;
-            if (timer <= 0f)
+            _timer -= Time.deltaTime;
+            if (_timer <= 0f)
             {
                 Destroy(gameObject);
             }
@@ -45,7 +43,7 @@ namespace BrawlShooter.Combat
         {
             if (other.TryGetComponent(out HealthComponent health))
             {
-                health.ApplyDamage(baseDamage, instigatorName);
+                health.ApplyDamage(baseDamage);
                 Destroy(gameObject);
             }
         }

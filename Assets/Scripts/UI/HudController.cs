@@ -5,42 +5,41 @@ using UnityEngine.UI;
 
 namespace BrawlShooter.UI
 {
-    /// <summary>
-    /// Coordinates all match overlay widgets, mirroring Brawl Stars HUD layout.
-    /// </summary>
     public sealed class HudController : MonoBehaviour
     {
-        [Header("Core Stats")]
         [SerializeField] private Slider healthSlider = default!;
+        [SerializeField] private Text timerLabel = default!;
         [SerializeField] private HealthComponent trackedHealth = default!;
 
-        [Header("Widgets")]
-        [SerializeField] private TeamScoreWidget scoreWidget = default!;
-        [SerializeField] private ScoreFeedWidget scoreFeed = default!;
-
-        private MatchStateController matchState = default!;
+        private MatchStateController _matchState = default!;
 
         private void Awake()
         {
-            matchState = GameServiceLocator.Resolve<MatchStateController>();
-            matchState.StateChanged += HandleMatchStateChanged;
-            matchState.EliminationOccurred += HandleElimination;
-            scoreWidget.Configure(0, 0, matchState.MatchLengthSeconds);
+            _matchState = GameServiceLocator.Resolve<MatchStateController>();
+            _matchState.StateChanged += OnMatchStateChanged;
             UpdateHealthBar();
         }
 
         private void OnDestroy()
         {
-            if (matchState != null)
+            if (_matchState != null)
             {
-                matchState.StateChanged -= HandleMatchStateChanged;
-                matchState.EliminationOccurred -= HandleElimination;
+                _matchState.StateChanged -= OnMatchStateChanged;
             }
         }
 
         private void Update()
         {
+            UpdateTimerLabel();
             UpdateHealthBar();
+        }
+
+        private void UpdateTimerLabel()
+        {
+            var elapsed = _matchState.Elapsed;
+            var minutes = Mathf.FloorToInt(elapsed / 60f);
+            var seconds = Mathf.FloorToInt(elapsed % 60f);
+            timerLabel.text = $"{minutes:00}:{seconds:00}";
         }
 
         private void UpdateHealthBar()
@@ -50,29 +49,12 @@ namespace BrawlShooter.UI
                 return;
             }
 
-            healthSlider.maxValue = trackedHealth.MaxHealth;
             healthSlider.value = trackedHealth.CurrentHealth;
         }
 
-        private void HandleMatchStateChanged(MatchState state)
+        private void OnMatchStateChanged(MatchState newState)
         {
-            if (state == MatchState.MatchEnded)
-            {
-                enabled = false;
-            }
-        }
-
-        private void HandleElimination(string killer, string victim, TeamAlignment team)
-        {
-            scoreFeed?.PushEntry(killer, victim);
-            if (team == TeamAlignment.Blue)
-            {
-                scoreWidget?.AddBluePoint();
-            }
-            else if (team == TeamAlignment.Red)
-            {
-                scoreWidget?.AddRedPoint();
-            }
+            timerLabel.color = newState == MatchState.SuddenDeath ? Color.red : Color.white;
         }
     }
 }
