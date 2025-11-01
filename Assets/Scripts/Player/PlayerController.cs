@@ -11,44 +11,44 @@ namespace BrawlShooter.Player
         [SerializeField] private Weapon equippedWeapon = default!;
         [SerializeField] private Transform aimPivot = default!;
 
-        private CharacterController characterController = default!;
-        private IInputRouter input = default!;
-        private float dashCooldownTimer;
+        private CharacterController _characterController = default!;
+        private IInputRouter _input = default!;
+        private float _dashCooldownTimer;
 
         private void Awake()
         {
-            characterController = GetComponent<CharacterController>();
-            input = GameServiceLocator.Resolve<IInputRouter>();
-            input.PrimaryFire += OnPrimaryFire;
-            input.SuperAbility += OnSuperAbility;
-            input.Dash += OnDash;
-            input.Enable();
-            dashCooldownTimer = 0f;
+            _characterController = GetComponent<CharacterController>();
+            _input = GameServiceLocator.Resolve<IInputRouter>();
+            _input.PrimaryFire += OnPrimaryFire;
+            _input.SuperAbility += OnSuperAbility;
+            _input.Dash += OnDash;
+            _input.Enable();
+            _dashCooldownTimer = 0f;
         }
 
         private void OnDestroy()
         {
-            if (input != null)
+            if (_input != null)
             {
-                input.PrimaryFire -= OnPrimaryFire;
-                input.SuperAbility -= OnSuperAbility;
-                input.Dash -= OnDash;
-                input.Disable();
+                _input.PrimaryFire -= OnPrimaryFire;
+                _input.SuperAbility -= OnSuperAbility;
+                _input.Dash -= OnDash;
+                _input.Disable();
             }
         }
 
         private void Update()
         {
             var deltaTime = Time.deltaTime;
-            input.Tick(deltaTime);
-            dashCooldownTimer -= deltaTime;
+            _input.Tick(deltaTime);
+            _dashCooldownTimer -= deltaTime;
 
-            var moveVector = new Vector3(input.Movement.x, 0f, input.Movement.y);
-            characterController.Move(moveVector * heroDefinition.MoveSpeed * deltaTime);
+            var moveVector = new Vector3(_input.Movement.x, 0f, _input.Movement.y);
+            _characterController.Move(moveVector * heroDefinition.MoveSpeed * deltaTime);
 
-            if (input.Aim.sqrMagnitude > 0.01f)
+            if (_input.Aim.sqrMagnitude > 0.01f)
             {
-                var forward = new Vector3(input.Aim.x, 0f, input.Aim.y);
+                var forward = new Vector3(_input.Aim.x, 0f, _input.Aim.y);
                 if (forward.sqrMagnitude > 0.01f)
                 {
                     aimPivot.forward = Vector3.Lerp(aimPivot.forward, forward.normalized, deltaTime * 20f);
@@ -68,20 +68,20 @@ namespace BrawlShooter.Player
         {
             if (heroDefinition.SuperAbility != null)
             {
-                AbilityRuntime.Spawn(heroDefinition.SuperAbility, aimPivot.position, aimPivot.forward, heroDefinition.DisplayName);
+                AbilityRuntime.Spawn(heroDefinition.SuperAbility, aimPivot.position, aimPivot.forward);
             }
         }
 
         private void OnDash()
         {
-            if (dashCooldownTimer > 0f)
+            if (_dashCooldownTimer > 0f)
             {
                 return;
             }
 
-            dashCooldownTimer = heroDefinition.DashCooldown;
+            _dashCooldownTimer = heroDefinition.DashCooldown;
             var dashVector = aimPivot.forward * 5f;
-            characterController.Move(dashVector);
+            _characterController.Move(dashVector);
         }
     }
 }

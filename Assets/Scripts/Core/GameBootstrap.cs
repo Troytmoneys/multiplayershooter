@@ -1,4 +1,3 @@
-using BrawlShooter.Networking;
 using UnityEngine;
 
 namespace BrawlShooter.Core
@@ -13,9 +12,6 @@ namespace BrawlShooter.Core
         private GameConfig config = default!;
 
         [SerializeField]
-        private RealtimeSessionManager sessionManager = default!;
-
-        [SerializeField]
         private bool enableDebugHud = true;
 
         private void Awake()
@@ -27,7 +23,6 @@ namespace BrawlShooter.Core
             GameServiceLocator.Register(config);
 
             var matchState = new MatchStateController();
-            matchState.ConfigureMatchLength(config.MatchDurationSeconds);
             GameServiceLocator.Register(matchState);
 
             var inputRouter = new InputRouter(config);
@@ -35,11 +30,6 @@ namespace BrawlShooter.Core
 
             var analytics = new TelemetryService();
             GameServiceLocator.Register<ITelemetryService>(analytics);
-
-            if (sessionManager != null)
-            {
-                DontDestroyOnLoad(sessionManager.gameObject);
-            }
 
             if (enableDebugHud)
             {
